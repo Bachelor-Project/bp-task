@@ -17,8 +17,14 @@ public class AppConfig extends ResourceConfig {
     
     public AppConfig(){
         super();
+
+//        packages("com.sun.jersey.multipart");
+
+//        register(FormDataParam.class);
+//        register(FormDataContentDisposition.class);
+
+        register(TaskService.class);
         
-        packages("com.mycompany.task");
     }
     
 }

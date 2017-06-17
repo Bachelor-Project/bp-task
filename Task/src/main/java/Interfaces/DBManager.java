@@ -7,6 +7,7 @@ package Interfaces;
 
 import java.util.List;
 import todos.Level;
+import todos.MainTopic;
 import todos.Task;
 
 /**
@@ -14,6 +15,11 @@ import todos.Task;
  * @author Dato
  */
 public interface DBManager {
+    
+    public void save(MainTopic mt);
+    public List<MainTopic> getMainTopics();
+    public void updateMainTopic(int id, String name);
+    public void deleteMainTopic(int id);
     
     public void save(Task t);
     public void updateTaskMainData(Task t);
@@ -28,4 +34,5 @@ public interface DBManager {
     
     public void addAssociatedTopic(int taskId, int topicId);
     public void deleteAssociatedTopic(int taskId, int topicId);
+    
 }

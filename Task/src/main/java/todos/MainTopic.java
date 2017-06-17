@@ -14,29 +14,29 @@ import java.util.Objects;
 public class MainTopic {
     
     private int id;
-    private String name = "";
+    private String descrip = "";
     
     public MainTopic(){}
     
     public MainTopic(int id, String name){
         this.id = id;
-        this.name = name;
+        this.descrip = name;
     }
 
     public int getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public String getDescrip() {
+        return descrip;
     }
 
     public void setId(int id) {
         this.id = id;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setDescrip(String name) {
+        this.descrip = name;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class MainTopic {
         if (this.id != other.id) {
             return false;
         }
-        if (!Objects.equals(this.name, other.name)) {
+        if (!Objects.equals(this.descrip, other.descrip)) {
             return false;
         }
         return true;
@@ -72,7 +72,7 @@ public class MainTopic {
 
     @Override
     public String toString() {
-        return "MainTopic{" + "id=" + id + ", name=" + name + '}';
+        return "MainTopic{" + "id=" + id + ", name=" + descrip + '}';
     }
     
 }
