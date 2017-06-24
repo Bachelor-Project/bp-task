@@ -9,6 +9,7 @@ import java.util.List;
 import todos.Level;
 import todos.MainTopic;
 import todos.Task;
+import todos.TopicType;
 
 /**
  *
@@ -18,8 +19,14 @@ public interface DBManager {
     
     public void save(MainTopic mt);
     public List<MainTopic> getMainTopics();
-    public void updateMainTopic(int id, String name);
+    public void updateMainTopic(int id, String newDescrip);
     public void deleteMainTopic(int id);
+    
+    public void save(int mainTopicId, TopicType type);
+    public List<TopicType> getTopicTypes(int mainTopicId);
+    public void updateTopicType(int mainTopicId, int topicId, String newDescrip);
+    public void deleteTopicType(int mainTopicId, int topicId);
+        
     
     public void save(Task t);
     public void updateTaskMainData(Task t);

@@ -15,14 +15,17 @@ import java.util.Map;
 import todos.Level;
 import todos.MainTopic;
 import todos.Task;
+import todos.TopicType;
 
 /**
  *
  * @author Dato
  */
 public class DBManagerFake implements DBManager {
+    
 
     private Map<Integer, MainTopic> mainTopics = new HashMap<>();
+    private Map<Integer, List<TopicType> > topicTypes = new HashMap<>();
     private Level[] levels = {new Level(1, "მარტივი"), new Level(2, "საშუალო"), new Level(3, "რთული")};
     
     public static final DBManager instance = new DBManagerFake();
@@ -62,6 +65,8 @@ public class DBManagerFake implements DBManager {
             mainTopics.remove(id);
         }
     }
+    
+    
     
     
     @Override
@@ -112,6 +117,52 @@ public class DBManagerFake implements DBManager {
     @Override
     public void deleteAssociatedTopic(int taskId, int topicId) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    
+    
+    
+    @Override
+    public void save(int mainTopicId, TopicType type) {
+        if (topicTypes.containsKey(mainTopicId)){
+            topicTypes.get(mainTopicId).add(type);
+        }
+        else {
+            ArrayList<TopicType> types = new ArrayList<>();
+            types.add(type);
+            topicTypes.put(mainTopicId, types);
+        }
+    }
+
+    @Override
+    public List<TopicType> getTopicTypes(int mainTopicId) {
+        return topicTypes.get(mainTopicId);
+    }
+
+    @Override
+    public void updateTopicType(int mainTopicId, int topicId, String newDescrip) {
+        if (topicTypes.containsKey(mainTopicId)){
+            List<TopicType> types = topicTypes.get(mainTopicId);
+            for (int i = 0; i < types.size(); i++) {
+                if (types.get(i).getId() == topicId){
+                    types.get(i).setDescrip(newDescrip);
+                    break;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void deleteTopicType(int mainTopicId, int topicId) {
+        if (topicTypes.containsKey(mainTopicId)){
+            List<TopicType> types = topicTypes.get(mainTopicId);
+            for (int i = 0; i < types.size(); i++) {
+                if (types.get(i).getId() == topicId){
+                    types.remove(i);
+                    break;
+                }
+            }
+        }
     }
     
 }

@@ -20,6 +20,7 @@ import todos.Language;
 import todos.Level;
 import todos.MainTopic;
 import todos.Task;
+import todos.TopicType;
 
 /**
  *
@@ -339,6 +340,26 @@ public class DBUtils implements DBManager {
 
     @Override
     public void deleteMainTopic(int id) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void save(int mainTopicId, TopicType type) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public List<TopicType> getTopicTypes(int mainTopicId) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void updateTopicType(int mainTopicId, int topicId, String newDescrip) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void deleteTopicType(int mainTopicId, int topicId) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
