@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
  */
 public class DBUtilsIT {
     
-    private final DBUtils instance = DBUtils.getInstance();
+    private final DBManagerReal instance = DBManagerReal.getInstance();
     
     public DBUtilsIT() {
     }
@@ -68,7 +68,7 @@ public class DBUtilsIT {
             
     
     /**
-     * Test of save method, of class DBUtils.
+     * Test of save method, of class DBManagerReal.
      */
     @Test
     public void testSave() {
@@ -80,18 +80,18 @@ public class DBUtilsIT {
     }
 
     /**
-     * Test of updateTaskMainData method, of class DBUtils.
+     * Test of updateTaskMainData method, of class DBManagerReal.
      */
     @Test @Ignore
     public void testUpdate() {
         System.out.println("update");
         Task t = null;
-        DBUtils instance = null;
+        DBManagerReal instance = null;
         Task expResult = null;
     }
 
     /**
-     * Test of deleteTask method, of class DBUtils.
+     * Test of deleteTask method, of class DBManagerReal.
      */
     @Test
     public void testDelete() {
@@ -101,7 +101,7 @@ public class DBUtilsIT {
     }
 
     /**
-     * Test of getTaskBy method, of class DBUtils.
+     * Test of getTaskBy method, of class DBManagerReal.
      */
     @Test
     public void testGetTaskBy() {
@@ -116,23 +116,23 @@ public class DBUtilsIT {
     }
 
     /**
-     * Test of getTasksIdsFor method, of class DBUtils.
+     * Test of getTasksIdsFor method, of class DBManagerReal.
      */
     @Test @Ignore
     public void testGetTasksIdsFor() {
         int topicId = 2;
-        DBUtils instance = null;
+        DBManagerReal instance = null;
         List<Integer> expResult = null;
         List<Integer> result = instance.getTasksIdsFor(topicId);
     }
 
     /**
-     * Test of getLevels method, of class DBUtils.
+     * Test of getLevels method, of class DBManagerReal.
      */
     @Test @Ignore
     public void testGetLevels() {
         System.out.println("getLevels");
-        DBUtils instance = null;
+        DBManagerReal instance = null;
         List<Level> expResult = null;
         List<Level> result = instance.getLevels();
     }

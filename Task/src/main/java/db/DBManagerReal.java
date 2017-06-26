@@ -26,15 +26,15 @@ import todos.TopicType;
  *
  * @author Dato
  */
-public class DBUtils implements DBManager {
+public class DBManagerReal implements DBManager {
 
     private final String connectionState = "org.apache.tomcat.jdbc.pool.interceptor.ConnectionState";
     private final String statementFinalizer = "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer";
     private DataSource datasource;
     
-    private static DBUtils instance;
+    public static DBManagerReal instance = new DBManagerReal();
     
-    private DBUtils(){
+    private DBManagerReal(){
         initDB();
     }
     
@@ -53,14 +53,6 @@ public class DBUtils implements DBManager {
         datasource.setPoolProperties(pool);
     }
     
-    public static DBUtils getInstance(){
-        if (instance == null){
-            instance = new DBUtils();
-        }
-        return instance;
-    }
-    
-    
     @Override
     public void save(Task t) {
         try {
@@ -75,7 +67,7 @@ public class DBUtils implements DBManager {
             }
             con.close();
         } catch (SQLException ex) {
-            Logger.getLogger(DBUtils.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         
     }
@@ -103,7 +95,7 @@ public class DBUtils implements DBManager {
             con.close();
             stmt.close();
         } catch (SQLException ex) {
-            Logger.getLogger(DBUtils.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         return result;
     }
@@ -137,7 +129,7 @@ public class DBUtils implements DBManager {
             stmt.execute();
             stmt.close();
         } catch (SQLException ex) {
-            Logger.getLogger(DBUtils.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
     }
 
@@ -153,7 +145,7 @@ public class DBUtils implements DBManager {
             con.close();
         } catch (SQLException ex) {
             result = false;
-            Logger.getLogger(DBUtils.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         return result;
     }
@@ -179,7 +171,7 @@ public class DBUtils implements DBManager {
             task.setTopics(makeMainTopicsFrom(topicsRs));
             
         } catch (SQLException ex) {
-            Logger.getLogger(DBUtils.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         
         return task;
@@ -233,7 +225,7 @@ public class DBUtils implements DBManager {
             stmt.close();
             con.close();
         } catch (SQLException ex) {
-            Logger.getLogger(DBUtils.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         return ids;
     }
@@ -249,7 +241,7 @@ public class DBUtils implements DBManager {
             stmt.close();
             con.close();
         } catch (SQLException ex) {
-            Logger.getLogger(DBUtils.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         return levels;
     }
@@ -270,7 +262,7 @@ public class DBUtils implements DBManager {
             saveSupportedLanguage(con, taskId, langId);
             con.close();
         } catch (SQLException ex) {
-            Logger.getLogger(DBUtils.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
     }
 
@@ -281,7 +273,7 @@ public class DBUtils implements DBManager {
             deleteLanguage(con, taskId, langId);
             con.close();
         } catch (SQLException ex) {
-            Logger.getLogger(DBUtils.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
     }
     
@@ -300,7 +292,7 @@ public class DBUtils implements DBManager {
             saveMainTopic(con, taskId, topicId);
             con.close();
         } catch (SQLException ex) {
-            Logger.getLogger(DBUtils.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
     }
     
@@ -311,7 +303,7 @@ public class DBUtils implements DBManager {
             deleteTopic(con, taskId, topicId);
             con.close();
         } catch (SQLException ex) {
-            Logger.getLogger(DBUtils.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
     }
     

@@ -6,10 +6,12 @@
 package com.mycompany.task;
 
 import Interfaces.DBManager;
-import fake.DBManagerFake;
+import db.DBManagerReal;
+import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -27,7 +29,7 @@ public class TaskService {
     
     public TaskService(){
 //        dbManager = DBUtils.getInstance();
-        dbManager = DBManagerFake.instance;
+        dbManager = DBManagerReal.instance;
     }
 
     public TaskService(DBManager dbManager){
@@ -51,6 +53,13 @@ public class TaskService {
     @Path("levels")
     public Response getLevels(){
         return Response.status(200).entity(dbManager.getLevels()).build();
+    }
+    
+    @GET
+    @Path("/main_topics/{mainTopicId}")
+    public Response getTasksFor(@PathParam("mainTopicId") int mainTopicID){
+        List<Integer> tasksIds = dbManager.getTasksIdsFor(mainTopicID);
+        return Response.status(200).entity(tasksIds).build();
     }
     
 }
