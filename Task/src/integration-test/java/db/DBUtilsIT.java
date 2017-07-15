@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
  */
 public class DBUtilsIT {
     
-    private final DBManagerReal instance = DBManagerReal.getInstance();
+    private final DBManagerReal instance = DBManagerReal.instance;
     
     public DBUtilsIT() {
     }

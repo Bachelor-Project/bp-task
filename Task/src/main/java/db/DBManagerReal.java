@@ -322,7 +322,26 @@ public class DBManagerReal implements DBManager {
 
     @Override
     public List<MainTopic> getMainTopics() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        List<MainTopic> mainTopics = new ArrayList<>();
+        try {
+            Connection con = datasource.getConnection();
+            
+            System.out.println("call procedure");
+            
+            CallableStatement stmt = con.prepareCall("call select_all_main_topics()");
+            stmt.execute();
+            
+            ResultSet rsSet = stmt.getResultSet();
+            while(rsSet.next()){
+                MainTopic mainTopic = new MainTopic(rsSet.getInt(1), rsSet.getString(2));
+                mainTopics.add(mainTopic);
+                
+                System.out.println(mainTopic);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        return mainTopics;
     }
 
     @Override

@@ -23,22 +23,22 @@ import javax.ws.rs.core.Response;
 @Path("/")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class TaskService {
+public class FilesDataService {
     
-    private DBManager dbManager;
+    private final DBManager dbManager;
     
-    public TaskService(){
-//        dbManager = DBUtils.getInstance();
+    public FilesDataService(){
         dbManager = DBManagerReal.instance;
     }
 
-    public TaskService(DBManager dbManager){
+    public FilesDataService(DBManager dbManager){
         this.dbManager = dbManager;
     }
     
     @GET
     @Path("main_topics")
     public Response getMainTopics(){
+        System.out.println("call getMainTopics...");
         return Response.status(200).entity(dbManager.getMainTopics()).build();
     }
     
