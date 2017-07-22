@@ -62,9 +62,17 @@ public class FilesDataService {
     }
     
     @GET
+    @Path("name_main_topic")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response getMainTopicNameBy(@QueryParam("id") int mainTopicID){
+        Response res = Response.status(200).entity(dbManager.getMainTopicNameBy(mainTopicID)).build();
+        return res;
+    }
+    
+    @GET
     @Path("priorities")
-    public Response getPriorities(@QueryParam("main_topic") String mainTopic){
-        return Response.status(200).entity(dbManager.getMainTopicsWithPriority(mainTopic)).build();
+    public Response getPriorities(@QueryParam("main_topic") int mainTopicID){
+        return Response.status(200).entity(dbManager.getTopicsWithPriorityFrom(mainTopicID)).build();
     }
     
     @GET
@@ -76,7 +84,6 @@ public class FilesDataService {
     @GET
     @Path("/counting_main_topics")
     public Response getCountingMainTopics (){
-        System.out.println("counting main topics ...");
         return Response.status(200).entity(dbManager.getMainTopicsWithCount()).build();
     }
     
@@ -99,9 +106,6 @@ public class FilesDataService {
             @FormDataParam("mainTopic") String mainTopic,
             @FormDataParam("priority") int priority) {
 
-            String params = String.format("%s %d", mainTopic, priority);
-            System.out.println("FilesData: " + params);
-        
             String fileName = fileDetail.getFileName();
             System.out.println("fileName: " + fileName);
             String uploadedFileLocation = topicsDestination + fileName;

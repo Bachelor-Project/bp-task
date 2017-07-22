@@ -325,7 +325,6 @@ public class DBManagerReal implements DBManager {
         List<MainTopic> mainTopics = new ArrayList<>();
         try {
             try (Connection con = datasource.getConnection()) {
-                System.out.println("call procedure");
                 
                 try (CallableStatement stmt = con.prepareCall("call select_all_main_topics()")) {
                     stmt.execute();
@@ -389,28 +388,23 @@ public class DBManagerReal implements DBManager {
     }
 
     @Override
-    public List<MainTopicPriorityPair> getMainTopicsWithPriority(String mainTopic) {
+    public List<MainTopicPriorityPair> getTopicsWithPriorityFrom(int mainTopicID) {
         List<MainTopicPriorityPair> result = new ArrayList();
         try {
             Connection con = datasource.getConnection();
-            CallableStatement stmt = con.prepareCall("call select_main_topics_priority(?)");
-            System.out.println("mainTopic: " + mainTopic);
-            stmt.setString(1, mainTopic);
+            CallableStatement stmt = con.prepareCall("call select_topics_by_priority_from(?)");
+            stmt.setInt(1, mainTopicID);
             stmt.execute();
             
             ResultSet rsSet = stmt.getResultSet();
-            System.out.println("before while...");
             while(rsSet.next()){
-                System.out.println("in while...");
                 MainTopicPriorityPair p = new MainTopicPriorityPair();
                 p.id = rsSet.getInt(1);
                 p.descrip = rsSet.getString(2);
                 p.priority = rsSet.getInt(3);
                 result.add(p);
                 
-                System.out.println(p);
             }
-            System.out.println("after while");
             stmt.close();
             con.close();
         } catch (SQLException ex) {
@@ -433,13 +427,33 @@ public class DBManagerReal implements DBManager {
                     counter.mainTopic = mt;
                     counter.count = rsSet.getInt(3);
                     result.add(counter);
-                    
-                    System.out.println(counter);
                 }
             }
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        return result;
+    }
+
+    @Override
+    public String getMainTopicNameBy(int mainTopicId) {
+        String result = "";
+        try {
+            Connection con = datasource.getConnection();
+            CallableStatement stmt = con.prepareCall("call select_main_topic_name_by(?)");
+            stmt.setInt(1, mainTopicId);
+            stmt.execute();
+            
+            ResultSet rsSet = stmt.getResultSet();
+            while(rsSet.next()){
+                result = rsSet.getString(1);
+            }
+            stmt.close();
+            con.close();
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        
         return result;
     }
 }

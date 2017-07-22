@@ -46,8 +46,9 @@ public interface DBManager {
     public void deleteAssociatedTopic(int taskId, int topicId);
 
     public void save(Topic topic);
-    public List<MainTopicPriorityPair> getMainTopicsWithPriority(String mainTopic);
+    public List<MainTopicPriorityPair> getTopicsWithPriorityFrom(int mainTopicID);
 
     public List<MainTopicCounter> getMainTopicsWithCount();
+    public String getMainTopicNameBy(int mainTopicId);
     
 }
