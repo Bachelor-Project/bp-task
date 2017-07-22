@@ -19,8 +19,9 @@ public class Task {
     private int id, timeLimit, memeoryLimit;
     private String name;
     private Level level = new Level();
-    private List<Language> languages = new ArrayList<>();
-    private List<MainTopic> topics = new ArrayList<>();
+    private MainTopic mainTopic = new MainTopic();
+//    private List<Language> languages = new ArrayList<>();
+//    private List<MainTopic> topics = new ArrayList<>();
     
     public Task(){
     }
@@ -44,14 +45,18 @@ public class Task {
     public String getName() {
         return name;
     }
-
-    public List<Language> getLanguages() {
-        return languages;
+    
+    public MainTopic getMainTopic(){
+        return mainTopic;
     }
 
-    public List<MainTopic> getTopics() {
-        return topics;
-    }
+//    public List<Language> getLanguages() {
+//        return languages;
+//    }
+//
+//    public List<MainTopic> getTopics() {
+//        return topics;
+//    }
     
     
 
@@ -75,14 +80,18 @@ public class Task {
     public void setName(String name) {
         this.name = name;
     }
-
-    public void setLanguages(List<Language> languages) {
-        this.languages = languages;
+    
+    public void setMainTopic(MainTopic mainTopic){
+        this.mainTopic = mainTopic;
     }
 
-    public void setTopics(List<MainTopic> topics) {
-        this.topics = topics;
-    }
+//    public void setLanguages(List<Language> languages) {
+//        this.languages = languages;
+//    }
+//
+//    public void setTopics(List<MainTopic> topics) {
+//        this.topics = topics;
+//    }
 
     @Override
     public int hashCode() {
@@ -111,10 +120,7 @@ public class Task {
         if (!Objects.equals(this.name, other.name)) {
             return false;
         }
-        if (!Objects.equals(this.level, other.level)) {
-            return false;
-        }
-        return compareLanguages(languages, other.getLanguages()) && compareTopics(topics, other.getTopics());
+        return !Objects.equals(this.level, other.level);
     }
     
     private boolean compareLanguages(List<Language> langes1, List<Language> langes2){
@@ -138,7 +144,7 @@ public class Task {
     @Override
     public String toString() {
         return "Task{" + "id=" + id + ", timeLimit=" + timeLimit + 
-                        ", memeoryLimit=" + memeoryLimit + ", name=" + name + ", level=" + level + ", languages=" + languages + '}';
+                        ", memeoryLimit=" + memeoryLimit + ", name=" + name + ", level=" + level + '}';
     }
 
 }

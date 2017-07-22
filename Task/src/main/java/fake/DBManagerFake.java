@@ -14,7 +14,10 @@ import java.util.List;
 import java.util.Map;
 import todos.Level;
 import todos.MainTopic;
+import todos.MainTopicCounter;
+import todos.MainTopicPriorityPair;
 import todos.Task;
+import todos.Topic;
 import todos.TopicType;
 
 /**
@@ -30,6 +33,8 @@ public class DBManagerFake implements DBManager {
     
     public static final DBManager instance = new DBManagerFake();
     
+    private static int mainTOpicCount = 1;
+    
     private DBManagerFake() {
         mainTopics.put(1, new MainTopic(1, "გრაფი"));
         mainTopics.put(2, new MainTopic(2, "გეომეტრია"));
@@ -37,8 +42,9 @@ public class DBManagerFake implements DBManager {
     }
     
     @Override
-    public void save(MainTopic mt){
-        mainTopics.put(mt.getId(), mt);
+    public void save(String mainTopicName){
+        int id = mainTOpicCount++;
+        mainTopics.put(id, new MainTopic(id, mainTopicName));
     }
     
     @Override
@@ -163,6 +169,21 @@ public class DBManagerFake implements DBManager {
                 }
             }
         }
+    }
+
+    @Override
+    public void save(Topic topic) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public List<MainTopicPriorityPair> getMainTopicsWithPriority(String mainTopic) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public List<MainTopicCounter> getMainTopicsWithCount() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
 }

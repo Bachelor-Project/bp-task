@@ -19,7 +19,10 @@ import org.apache.tomcat.jdbc.pool.PoolProperties;
 import todos.Language;
 import todos.Level;
 import todos.MainTopic;
+import todos.MainTopicCounter;
+import todos.MainTopicPriorityPair;
 import todos.Task;
+import todos.Topic;
 import todos.TopicType;
 
 /**
@@ -56,20 +59,17 @@ public class DBManagerReal implements DBManager {
     @Override
     public void save(Task t) {
         try {
-            Connection con = datasource.getConnection();
-            saveTaskMainInfo(con, t);
-            int taskId = getTaskIdBy(t.getName());
-            for (Language lang : t.getLanguages()) {
-                saveSupportedLanguage(con, taskId, lang.getId());
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call save_task(?, ?, ?, ?, ?)")) {
+                stmt.setString(1, t.getName());
+                stmt.setString(2, t.getLevel().getDescrip());
+                stmt.setString(3, t.getMainTopic().getDescrip());
+                stmt.setInt(4, t.getTimeLimit());
+                stmt.setInt(5, t.getMemeoryLimit());
+                stmt.execute();
             }
-            for (MainTopic topic : t.getTopics()) {
-                saveMainTopic(con, taskId, topic.getId());
-            }
-            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        
     }
     
     private void saveTaskMainInfo(Connection con, Task t) throws SQLException{
@@ -128,6 +128,7 @@ public class DBManagerReal implements DBManager {
             stmt.setInt(5, t.getMemeoryLimit());
             stmt.execute();
             stmt.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -164,12 +165,11 @@ public class DBManagerReal implements DBManager {
             
             stmt.getMoreResults();
             ResultSet languagesRs = stmt.getResultSet();
-            task.setLanguages(makeLanguagesFrom(languagesRs));
             
             stmt.getMoreResults();
             ResultSet topicsRs = stmt.getResultSet();
-            task.setTopics(makeMainTopicsFrom(topicsRs));
             
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -308,35 +308,34 @@ public class DBManagerReal implements DBManager {
     }
     
     private void deleteTopic(Connection con, int taskId, int topicId) throws SQLException{
-        CallableStatement stmt = con.prepareCall("call delete_associated_topic(?, ?)");
-        stmt.setInt(1, taskId);
-        stmt.setInt(2, topicId);
-        stmt.execute();
-        stmt.close();
+        try (CallableStatement stmt = con.prepareCall("call delete_associated_topic(?, ?)")) {
+            stmt.setInt(1, taskId);
+            stmt.setInt(2, topicId);
+            stmt.execute();
+        }
     }
 
     @Override
-    public void save(MainTopic mt) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void save(String mainTopicName) {
+        
     }
 
     @Override
     public List<MainTopic> getMainTopics() {
         List<MainTopic> mainTopics = new ArrayList<>();
         try {
-            Connection con = datasource.getConnection();
-            
-            System.out.println("call procedure");
-            
-            CallableStatement stmt = con.prepareCall("call select_all_main_topics()");
-            stmt.execute();
-            
-            ResultSet rsSet = stmt.getResultSet();
-            while(rsSet.next()){
-                MainTopic mainTopic = new MainTopic(rsSet.getInt(1), rsSet.getString(2));
-                mainTopics.add(mainTopic);
+            try (Connection con = datasource.getConnection()) {
+                System.out.println("call procedure");
                 
-                System.out.println(mainTopic);
+                try (CallableStatement stmt = con.prepareCall("call select_all_main_topics()")) {
+                    stmt.execute();
+                    
+                    ResultSet rsSet = stmt.getResultSet();
+                    while(rsSet.next()){
+                        MainTopic mainTopic = new MainTopic(rsSet.getInt(1), rsSet.getString(2));
+                        mainTopics.add(mainTopic);
+                    }
+                }
             }
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
@@ -372,5 +371,75 @@ public class DBManagerReal implements DBManager {
     @Override
     public void deleteTopicType(int mainTopicId, int topicId) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void save(Topic topic) {
+        try {
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call save_topic(?, ?, ?, ?)")) {
+                stmt.setString(1, topic.getName());
+                stmt.setString(2, topic.getFielExt());
+                stmt.setString(3, topic.getMainTopic().getDescrip());
+                stmt.setInt(4, topic.getPriority());
+                stmt.execute();
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+    }
+
+    @Override
+    public List<MainTopicPriorityPair> getMainTopicsWithPriority(String mainTopic) {
+        List<MainTopicPriorityPair> result = new ArrayList();
+        try {
+            Connection con = datasource.getConnection();
+            CallableStatement stmt = con.prepareCall("call select_main_topics_priority(?)");
+            System.out.println("mainTopic: " + mainTopic);
+            stmt.setString(1, mainTopic);
+            stmt.execute();
+            
+            ResultSet rsSet = stmt.getResultSet();
+            System.out.println("before while...");
+            while(rsSet.next()){
+                System.out.println("in while...");
+                MainTopicPriorityPair p = new MainTopicPriorityPair();
+                p.id = rsSet.getInt(1);
+                p.descrip = rsSet.getString(2);
+                p.priority = rsSet.getInt(3);
+                result.add(p);
+                
+                System.out.println(p);
+            }
+            System.out.println("after while");
+            stmt.close();
+            con.close();
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        return result;
+    }
+
+    @Override
+    public List<MainTopicCounter> getMainTopicsWithCount() {
+        List<MainTopicCounter> result = new ArrayList<>();
+        try {
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call select_main_topics_with_count_for_topics()")) {
+                stmt.execute();
+                
+                ResultSet rsSet = stmt.getResultSet();
+                while(rsSet.next()){
+                    MainTopic mt = new MainTopic(rsSet.getInt(1), rsSet.getString(2));
+                    MainTopicCounter counter = new MainTopicCounter();
+                    counter.mainTopic = mt;
+                    counter.count = rsSet.getInt(3);
+                    result.add(counter);
+                    
+                    System.out.println(counter);
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        return result;
     }
 }

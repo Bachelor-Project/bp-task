@@ -8,7 +8,10 @@ package Interfaces;
 import java.util.List;
 import todos.Level;
 import todos.MainTopic;
+import todos.MainTopicCounter;
+import todos.MainTopicPriorityPair;
 import todos.Task;
+import todos.Topic;
 import todos.TopicType;
 
 /**
@@ -17,7 +20,7 @@ import todos.TopicType;
  */
 public interface DBManager {
     
-    public void save(MainTopic mt);
+    public void save(String mainTopicName);
     public List<MainTopic> getMainTopics();
     public void updateMainTopic(int id, String newDescrip);
     public void deleteMainTopic(int id);
@@ -41,5 +44,10 @@ public interface DBManager {
     
     public void addAssociatedTopic(int taskId, int topicId);
     public void deleteAssociatedTopic(int taskId, int topicId);
+
+    public void save(Topic topic);
+    public List<MainTopicPriorityPair> getMainTopicsWithPriority(String mainTopic);
+
+    public List<MainTopicCounter> getMainTopicsWithCount();
     
 }

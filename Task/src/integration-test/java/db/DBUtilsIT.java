@@ -58,12 +58,12 @@ public class DBUtilsIT {
     
     private void addLanguages(Task t, Language... lang){
         List<Language> lanuages = Arrays.asList(lang);
-        t.setLanguages(lanuages);
+//        t.setLanguages(lanuages);
     }
     
     private void addTopics(Task t, MainTopic... topics) {
         List<MainTopic> mainTopics = Arrays.asList(topics);
-        t.setTopics(mainTopics);
+//        t.setTopics(mainTopics);
     }
             
     
