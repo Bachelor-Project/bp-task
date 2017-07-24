@@ -6,6 +6,7 @@
 package com.mycompany.task;
 
 import Interfaces.DBManager;
+import Interfaces.Execution;
 import com.sun.javafx.binding.StringFormatter;
 import db.DBManagerReal;
 import java.io.BufferedOutputStream;
@@ -15,7 +16,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
@@ -93,6 +96,14 @@ public class FilesDataService {
         List<Integer> tasksIds = dbManager.getTasksIdsFor(mainTopicID);
         return Response.status(200).entity(tasksIds).build();
     }
+    
+    @GET
+    @Path("tasks/{id}")
+    public Response getTaskFor(@PathParam("id") int taskId){
+        return Response.status(200).
+                type(MediaType.TEXT_PLAIN) // ?????????????
+                .entity("TaskData test").build();
+    } 
     
     private final String topicsDestination = "/home/dato/Documents/project/topics/";
     
@@ -234,5 +245,32 @@ public class FilesDataService {
                 bos.write(bytesIn, 0, read);
             }
         }
+    }
+    
+    private final Map<String, Execution> executionsMap = new HashMap<>();
+    
+    @GET
+    @Path("run_code")
+    public Response runCode(@QueryParam("lang") String lang,
+                            @QueryParam("username") String username,
+                            @QueryParam("taskId") int taskId,
+                            @QueryParam("tests") List<String> testsIds,
+                            @QueryParam("compiled") boolean compiled){
+        String params = String.format("%s %s %d %d", lang, username, taskId, testsIds.size());
+        System.out.println("params: " + params);
+        
+        if (compiled){
+            if (executionsMap.containsKey(lang)){
+                Execution execution = executionsMap.get(lang);
+//                TaskData td = getTaskDataFor(taskId);
+                
+                return Response.status(200).type(MediaType.TEXT_PLAIN).encoding("success").build();
+            }
+            else {
+                return Response.status(400).type(MediaType.TEXT_PLAIN).entity("No Language support.").build();
+            }
+        }
+        return Response.status(400).type(MediaType.TEXT_PLAIN).entity("No Compiled").build();
+
     }
 }
