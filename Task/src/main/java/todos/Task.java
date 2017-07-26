@@ -20,8 +20,6 @@ public class Task {
     private String name;
     private Level level = new Level();
     private MainTopic mainTopic = new MainTopic();
-//    private List<Language> languages = new ArrayList<>();
-//    private List<MainTopic> topics = new ArrayList<>();
     
     public Task(){
     }
@@ -50,15 +48,6 @@ public class Task {
         return mainTopic;
     }
 
-//    public List<Language> getLanguages() {
-//        return languages;
-//    }
-//
-//    public List<MainTopic> getTopics() {
-//        return topics;
-//    }
-    
-    
 
     
     public void setId(int id) {

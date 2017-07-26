@@ -7,7 +7,7 @@ package Interfaces;
 
 import java.util.List;
 import todos.ExecResult;
-import todos.TaskData;
+import todos.Task;
 
 /**
  *
@@ -15,6 +15,14 @@ import todos.TaskData;
  */
 public abstract class Execution {
     
-    public abstract ExecResult[] run(String codeFilePath, TaskData taskData, String taskDir, List<String> testsIds);
+    protected String usersCodesPath = "./codesData/users/";
+    protected String tasksDockerPath = "./tasks/";
+    protected String allTaskTestsFolderName = "tests";
+    protected String testsFilesExtention = "in";
+    protected int valueOfSecond = 1000;
+    protected String runDockerImage = "sudo -S docker run --rm -v /home/dato/Documents/project:/test -w /test oracle-java";
     
+    
+    public abstract List<ExecResult> run(String codeFilePath, Task taskData, String tasksRealPath);
+    public abstract String getCodeFilePath(String username, String taskName);
 }

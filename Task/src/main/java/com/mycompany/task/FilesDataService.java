@@ -7,11 +7,11 @@ package com.mycompany.task;
 
 import Interfaces.DBManager;
 import Interfaces.Execution;
-import com.sun.javafx.binding.StringFormatter;
+import core.JavaExecution;
+import db.DBData;
 import db.DBManagerReal;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,8 +34,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import static org.glassfish.jersey.message.internal.ReaderWriter.BUFFER_SIZE;
+import todos.ExecResult;
 import todos.MainTopic;
+import todos.RunCodeDTO;
 import todos.Task;
 import todos.Topic;
 
@@ -51,11 +52,12 @@ public class FilesDataService {
     private final DBManager dbManager;
     
     public FilesDataService(){
-        dbManager = DBManagerReal.instance;
+        this(DBManagerReal.instance);
     }
 
     public FilesDataService(DBManager dbManager){
         this.dbManager = dbManager;
+        executionsMap.put("java", new JavaExecution());
     }
     
     @GET
@@ -179,20 +181,23 @@ public class FilesDataService {
                             @FormDataParam("file") FormDataContentDisposition fileDetail,
                             @FormDataParam("time_lm") int timeLm,
                             @FormDataParam("memory_lm") int memoryLm,
-                            @FormDataParam("mainTopic") String mainTopic,
+                            @FormDataParam("mainTopic") String mainTopicData,
                             @FormDataParam("level") String level){
         try {
-            String params = String.format("%s %d %d %s %s", 
-                                fileDetail.getFileName(), timeLm, memoryLm, mainTopic, level);
-            System.out.println("params: " + params);
-            
-            
-            // save in folder:
-            unzipAndSave(fileStream);
-            
-            // save in DB:
             String name = fileDetail.getFileName();
             String nameWithoutExt = name.substring(0, name.lastIndexOf("."));
+            String params = String.format("%s %d %d %s %s", 
+                                name, timeLm, memoryLm, mainTopicData, level);
+            System.out.println("params: " + params);
+            String mainTopic = mainTopicData;
+            if (isExistMainTopic(mainTopicData)){
+                mainTopic = dbManager.getMainTopicNameBy(Integer.parseInt(mainTopicData));
+            }
+
+            // save in folder:
+            unzipAndSave(fileStream, nameWithoutExt);
+            
+            // save in DB:
             Task task = makeTaskFrom(nameWithoutExt, timeLm, memoryLm, mainTopic, level);
             dbManager.save(task);
             
@@ -201,6 +206,17 @@ public class FilesDataService {
             Logger.getLogger(FilesDataService.class.getName()).log(Level.SEVERE, null, ex);
         }
         return Response.status(400).entity("unzip exception").build();
+    }
+    
+    private boolean isExistMainTopic(String mainTopic){
+        boolean res = true;
+        for (int i = 0; i < mainTopic.length(); i++){
+            if (!Character.isDigit(mainTopic.charAt(i))){
+                res = false;
+                break;
+            }
+        }
+        return res;
     }
     
     private Task makeTaskFrom(String name, int timeLimit, int memoryLimit, String mainTopic, String level){
@@ -213,15 +229,17 @@ public class FilesDataService {
         return task;
     }
     
-    private void unzipAndSave(InputStream zipFileStream) throws IOException {
-        File destDir = new File(tasksDestination);
+    private void unzipAndSave(InputStream zipFileStream, String taskZipName) throws IOException {
+        String newFolderPath = tasksDestination + taskZipName + File.separator;
+        File destDir = new File(newFolderPath);
         if (!destDir.exists()) {
             destDir.mkdir();
         }
+        
         try (ZipInputStream zipInStream = new ZipInputStream(zipFileStream)) {
             ZipEntry entry = zipInStream.getNextEntry();
             while (entry != null) {
-                String filePath = tasksDestination + File.separator + entry.getName();
+                String filePath = newFolderPath + entry.getName();
                 if (!entry.isDirectory()) {
                     extractFile(zipInStream, filePath);
                 } else {
@@ -249,22 +267,24 @@ public class FilesDataService {
     
     private final Map<String, Execution> executionsMap = new HashMap<>();
     
-    @GET
+    @POST
     @Path("run_code")
-    public Response runCode(@QueryParam("lang") String lang,
-                            @QueryParam("username") String username,
-                            @QueryParam("taskId") int taskId,
-                            @QueryParam("tests") List<String> testsIds,
-                            @QueryParam("compiled") boolean compiled){
-        String params = String.format("%s %s %d %d", lang, username, taskId, testsIds.size());
+    public Response runCode(RunCodeDTO runCodeRequest){
+        String params = String.format("%s", runCodeRequest);
         System.out.println("params: " + params);
         
-        if (compiled){
-            if (executionsMap.containsKey(lang)){
-                Execution execution = executionsMap.get(lang);
-//                TaskData td = getTaskDataFor(taskId);
+        if (runCodeRequest.isCompiled()){
+            if (executionsMap.containsKey(runCodeRequest.getLang())){
+                Execution execution = executionsMap.get(runCodeRequest.getLang());
+                Task task = dbManager.getTaskBy(runCodeRequest.getTaskId());
+                System.out.println("Executoin: " + execution);
+                System.out.println("runCodeRequest: " + runCodeRequest);
+                String codeFilePath = execution.getCodeFilePath(runCodeRequest.getUsername(), task.getName());
                 
-                return Response.status(200).type(MediaType.TEXT_PLAIN).encoding("success").build();
+                List<ExecResult> execRes = execution.run(codeFilePath, task, tasksDestination);
+                return Response.status(200).
+//                        type(MediaType.TEXT_PLAIN). // ------------
+                        entity(execRes).build();
             }
             else {
                 return Response.status(400).type(MediaType.TEXT_PLAIN).entity("No Language support.").build();
@@ -273,4 +293,5 @@ public class FilesDataService {
         return Response.status(400).type(MediaType.TEXT_PLAIN).entity("No Compiled").build();
 
     }
+    
 }

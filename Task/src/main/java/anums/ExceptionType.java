@@ -10,5 +10,5 @@ package anums;
  * @author dato
  */
 public enum ExceptionType {
-    Timeout, OutOfMemory, SomeRuntimeExc, NoError;
+    Timeout, OutOfMemory, SomeRuntimeExc, TestFailed, NoError;
 }

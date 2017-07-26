@@ -138,12 +138,10 @@ public class DBManagerReal implements DBManager {
     public boolean deleteTask(int id) {
         boolean result = true;
         try {
-            Connection con = datasource.getConnection();
-            CallableStatement stmt = con.prepareCall("call delete_task(?)");
-            stmt.setInt(1, id);
-            stmt.execute();
-            stmt.close();
-            con.close();
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call delete_task(?)")) {
+                stmt.setInt(1, id);
+                stmt.execute();
+            }
         } catch (SQLException ex) {
             result = false;
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
@@ -155,21 +153,17 @@ public class DBManagerReal implements DBManager {
     public Task getTaskBy(int id) {
         Task task = null;
         try {
-            Connection con = datasource.getConnection();
-            CallableStatement stmt = con.prepareCall("call select_task_info(?)");
-            stmt.setInt(1, id);
-            stmt.execute();
-            
-            ResultSet configRs = stmt.getResultSet();
-            task = makeTaskFrom(configRs);
-            
-            stmt.getMoreResults();
-            ResultSet languagesRs = stmt.getResultSet();
-            
-            stmt.getMoreResults();
-            ResultSet topicsRs = stmt.getResultSet();
-            
-            con.close();
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call select_task_info(?)")) {
+                stmt.setInt(1, id);
+                stmt.execute();
+                ResultSet configRs = stmt.getResultSet();
+                task = makeTaskFrom(configRs);
+//            stmt.getMoreResults();
+//            ResultSet languagesRs = stmt.getResultSet();
+//            
+//            stmt.getMoreResults();
+//            ResultSet topicsRs = stmt.getResultSet();
+            }
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -213,17 +207,15 @@ public class DBManagerReal implements DBManager {
     public List<Integer> getTasksIdsFor(int topicId) {
         List<Integer> ids = new ArrayList<>();
         try {
-            Connection con = datasource.getConnection();
-            CallableStatement stmt = con.prepareCall("call deleteLanguage(?)");
-            stmt.setInt(1, topicId);
-            stmt.execute();
-            ResultSet set = stmt.getResultSet();
-            while(set.next()){
-                ids.add(set.getInt(1));
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call deleteLanguage(?)")) {
+                stmt.setInt(1, topicId);
+                stmt.execute();
+                ResultSet set = stmt.getResultSet();
+                while(set.next()){
+                    ids.add(set.getInt(1));
+                }
+                
             }
-            
-            stmt.close();
-            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -234,12 +226,10 @@ public class DBManagerReal implements DBManager {
     public List<Level> getLevels() {
         List<Level> levels = new ArrayList<>();
         try {
-            Connection con = datasource.getConnection();
-            CallableStatement stmt = con.prepareCall("call select_all_levels()");
-            stmt.execute();
-            levels = convertToLevels(stmt.getResultSet());
-            stmt.close();
-            con.close();
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call select_all_levels()")) {
+                stmt.execute();
+                levels = convertToLevels(stmt.getResultSet());
+            }
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -258,9 +248,9 @@ public class DBManagerReal implements DBManager {
     @Override
     public void addSupportedLanguage(int taskId, int langId) {
         try {
-            Connection con = datasource.getConnection();
-            saveSupportedLanguage(con, taskId, langId);
-            con.close();
+            try (Connection con = datasource.getConnection()) {
+                saveSupportedLanguage(con, taskId, langId);
+            }
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -269,28 +259,28 @@ public class DBManagerReal implements DBManager {
     @Override
     public void deleteSupportedLanguage(int taskId, int langId) {
         try {
-            Connection con = datasource.getConnection();
-            deleteLanguage(con, taskId, langId);
-            con.close();
+            try (Connection con = datasource.getConnection()) {
+                deleteLanguage(con, taskId, langId);
+            }
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
     }
     
     private void deleteLanguage(Connection con, int taskId, int langId) throws SQLException{
-        CallableStatement stmt = con.prepareCall("call delete_supported_languages(?, ?)");
+        try (CallableStatement stmt = con.prepareCall("call delete_supported_languages(?, ?)")) {
             stmt.setInt(1, taskId);
             stmt.setInt(2, langId);
             stmt.execute();
-            stmt.close();
+        }
     }
 
     @Override
     public void addAssociatedTopic(int taskId, int topicId) {
         try {
-            Connection con = datasource.getConnection();
-            saveMainTopic(con, taskId, topicId);
-            con.close();
+            try (Connection con = datasource.getConnection()) {
+                saveMainTopic(con, taskId, topicId);
+            }
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -299,9 +289,9 @@ public class DBManagerReal implements DBManager {
     @Override
     public void deleteAssociatedTopic(int taskId, int topicId) {
         try {
-            Connection con = datasource.getConnection();
-            deleteTopic(con, taskId, topicId);
-            con.close();
+            try (Connection con = datasource.getConnection()) {
+                deleteTopic(con, taskId, topicId);
+            }
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -391,22 +381,20 @@ public class DBManagerReal implements DBManager {
     public List<MainTopicPriorityPair> getTopicsWithPriorityFrom(int mainTopicID) {
         List<MainTopicPriorityPair> result = new ArrayList();
         try {
-            Connection con = datasource.getConnection();
-            CallableStatement stmt = con.prepareCall("call select_topics_by_priority_from(?)");
-            stmt.setInt(1, mainTopicID);
-            stmt.execute();
-            
-            ResultSet rsSet = stmt.getResultSet();
-            while(rsSet.next()){
-                MainTopicPriorityPair p = new MainTopicPriorityPair();
-                p.id = rsSet.getInt(1);
-                p.descrip = rsSet.getString(2);
-                p.priority = rsSet.getInt(3);
-                result.add(p);
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call select_topics_by_priority_from(?)")) {
+                stmt.setInt(1, mainTopicID);
+                stmt.execute();
                 
+                ResultSet rsSet = stmt.getResultSet();
+                while(rsSet.next()){
+                    MainTopicPriorityPair p = new MainTopicPriorityPair();
+                    p.id = rsSet.getInt(1);
+                    p.descrip = rsSet.getString(2);
+                    p.priority = rsSet.getInt(3);
+                    result.add(p);
+                    
+                }
             }
-            stmt.close();
-            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -439,17 +427,15 @@ public class DBManagerReal implements DBManager {
     public String getMainTopicNameBy(int mainTopicId) {
         String result = "";
         try {
-            Connection con = datasource.getConnection();
-            CallableStatement stmt = con.prepareCall("call select_main_topic_name_by(?)");
-            stmt.setInt(1, mainTopicId);
-            stmt.execute();
-            
-            ResultSet rsSet = stmt.getResultSet();
-            while(rsSet.next()){
-                result = rsSet.getString(1);
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call select_main_topic_name_by(?)")) {
+                stmt.setInt(1, mainTopicId);
+                stmt.execute();
+                
+                ResultSet rsSet = stmt.getResultSet();
+                while(rsSet.next()){
+                    result = rsSet.getString(1);
+                }
             }
-            stmt.close();
-            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
