@@ -8,19 +8,23 @@ package com.mycompany.task;
 import Interfaces.DBManager;
 import Interfaces.Execution;
 import core.JavaExecution;
-import db.DBData;
 import db.DBManagerReal;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.ws.rs.Consumes;
@@ -35,9 +39,12 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import todos.ExecResult;
+import todos.Hint;
 import todos.MainTopic;
 import todos.RunCodeDTO;
 import todos.Task;
+import todos.TaskFullData;
+import todos.Test;
 import todos.Topic;
 
 /**
@@ -88,8 +95,14 @@ public class FilesDataService {
     
     @GET
     @Path("/counting_main_topics")
-    public Response getCountingMainTopics (){
-        return Response.status(200).entity(dbManager.getMainTopicsWithCount()).build();
+    public Response getCountingMainTopicsForTopics (){
+        return Response.status(200).entity(dbManager.getMainTopicsWithCountForTopics()).build();
+    }
+    
+    @GET
+    @Path("/tasks_counting_main_topics")
+    public Response getCountingMainTopicsForTasks (){
+        return Response.status(200).entity(dbManager.getMainTopicsWithCountForTasks()).build();
     }
     
     @GET
@@ -98,6 +111,158 @@ public class FilesDataService {
         List<Integer> tasksIds = dbManager.getTasksIdsFor(mainTopicID);
         return Response.status(200).entity(tasksIds).build();
     }
+    
+    @GET
+    @Path("/tasks_min_data/{mt_id}")
+    public Response getTasksMinData(@PathParam("mt_id") int mtID){
+        System.out.println("main topic id: " + mtID);
+        return Response.status(200).entity(dbManager.getTasksMinInfo(mtID)).build();
+    }
+    
+    @GET
+    @Path("/task_full_data/{task_id}")
+    public Response getTaskFullData(@PathParam("task_id") int taskID){
+        System.out.println("task_id: " + taskID);
+        
+        Task t = dbManager.getTaskBy(taskID);
+        String taskDirPath = tasksDestination + t.getName();
+        File taskFile = new File(taskDirPath + File.separator + "task.txt");
+        File hintFile = new File(taskDirPath + File.separator + "hint.txt");
+        File testsFolder = new File(taskDirPath + File.separator + "tests");
+        File solutionsFolder = new File(taskDirPath + File.separator + "solutions");
+        
+        TaskFullData tfd = new TaskFullData();
+        try {
+            tfd.setTask(t);
+            if (taskFile.exists())
+                tfd.addTaskContent(readFile(taskFile));
+            if(hintFile.exists())
+                tfd.setHints(readHint(hintFile));
+            if (testsFolder.exists())
+                tfd.setTests(readTestFolder(testsFolder));
+            if(solutionsFolder.exists()){
+                List<Hint> soluTionHints = readSolutonFolder(tfd.getHints().size(), solutionsFolder);
+                for (Hint soluTionHint : soluTionHints) {
+                    tfd.getHints().add(soluTionHint);
+                }
+            }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(FilesDataService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(FilesDataService.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return Response.status(200).entity(tfd).build();
+    }
+    
+    private String readFile(File file) throws FileNotFoundException, IOException {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while((line = reader.readLine()) != null){
+                sb.append(line);
+                sb.append("\n");
+            }
+        }
+        return sb.toString();
+    }
+    
+    private List<Hint> readHint(File file) throws FileNotFoundException, IOException {
+        List<Hint> result = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while((line = reader.readLine()) != null){
+                String tLine = line.trim();
+                if (tLine.startsWith("#")){
+                    Hint h = new Hint();
+                    
+                    h.id = Integer.parseInt(tLine.substring(1));
+                    h.title = "მითითება N " + h.id;
+                    h.isCode = false;
+                    result.add(h);
+                }
+                else {
+                    Hint prevHint = result.get(result.size() - 1);
+                    prevHint.addContent(line);
+                }
+            }
+        }
+        return result;
+    }
+    
+    private List<Test> readTestFolder(File file) throws IOException {
+        List<Test> tests = new ArrayList<>();
+        File[] testOutputFiles = file.listFiles();
+        for (File testOut : testOutputFiles) {
+            String nameWithExt = testOut.getName();
+            String name = nameWithExt.substring(0, nameWithExt.lastIndexOf("."));
+            
+            List<Test> existed = tests.stream().filter((t) -> t.name.equals(name)).collect(Collectors.toList());
+            if (existed.isEmpty()){ // have not test
+                Test test = new Test();
+                test.name = name;
+                fillTestInputOrOutput(nameWithExt.contains(".in"), testOut, test);
+                tests.add(test);
+            }
+            else { // have test
+                Test prevTest = existed.get(0);
+                fillTestInputOrOutput(nameWithExt.contains(".in"), testOut, prevTest);
+            }
+        }
+        return tests;
+    }
+    
+    private void fillTestInputOrOutput(boolean isInput, File file, Test test) throws IOException{
+        String fileContent = readFile(file);
+        if (isInput){
+            test.input = fileContent;
+        }
+        else {
+            test.output = fileContent;
+        }
+    }
+    
+    private List<Hint> readSolutonFolder(int verbalHintsCount, File solFolder) throws FileNotFoundException, IOException{
+        List<Hint> hints = new ArrayList<>();
+        File[] files = solFolder.listFiles();
+        int count = verbalHintsCount;
+        for (File file : files) {
+            count = count + 1;
+            String content = readSolutionHintFile(file);
+            
+            Hint solHint = new Hint();
+            solHint.id = count;
+            solHint.isCode = true;
+            String fileName = file.getName();
+            solHint.title = fileName.substring(fileName.lastIndexOf(".") + 1);
+            solHint.addContent(content);
+            hints.add(solHint);
+        }
+        return hints;
+    }
+    
+    private String readSolutionHintFile(File hintFile) throws FileNotFoundException, IOException{
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(hintFile))) {
+            String line;
+            while((line = reader.readLine()) != null){
+                sb.append(line);
+                sb.append("\n\n");
+            }
+        }
+        return sb.toString();
+    }
+    
+    
+    @GET
+    @Path("/pdf")
+    public Response getPDF(@QueryParam("name") String name){
+        String folder = "/home/dato/Documents/project/topics/";
+        String pdfURL = folder+name;
+        File pdf = new File(pdfURL);
+        System.out.println("pdf: "+pdf.getAbsolutePath());
+        return Response.ok(pdf).type("application/pdf").build();
+    }
+    
     
     @GET
     @Path("tasks/{id}")
@@ -223,7 +388,7 @@ public class FilesDataService {
         Task task = new Task();
         task.setName(name);
         task.setTimeLimit(timeLimit);
-        task.setMemeoryLimit(memoryLimit);
+        task.setMemoryLimit(memoryLimit);
         task.setMainTopic(new MainTopic(0, mainTopic));
         task.setLevel(new todos.Level(0, level));
         return task;

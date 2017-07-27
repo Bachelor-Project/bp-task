@@ -6,11 +6,13 @@
 package Interfaces;
 
 import java.util.List;
+import todos.Comment;
 import todos.Level;
 import todos.MainTopic;
 import todos.MainTopicCounter;
 import todos.MainTopicPriorityPair;
 import todos.Task;
+import todos.TaskMin;
 import todos.Topic;
 import todos.TopicType;
 
@@ -48,7 +50,9 @@ public interface DBManager {
     public void save(Topic topic);
     public List<MainTopicPriorityPair> getTopicsWithPriorityFrom(int mainTopicID);
 
-    public List<MainTopicCounter> getMainTopicsWithCount();
+    public List<MainTopicCounter> getMainTopicsWithCountForTopics();
+    public List<MainTopicCounter> getMainTopicsWithCountForTasks();
     public String getMainTopicNameBy(int mainTopicId);
     
+    public List<TaskMin> getTasksMinInfo(int mtID);
 }

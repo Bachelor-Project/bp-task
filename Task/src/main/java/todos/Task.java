@@ -16,7 +16,7 @@ import java.util.Objects;
  */
 public class Task {
     
-    private int id, timeLimit, memeoryLimit;
+    private int id, timeLimit, memoryLimit;
     private String name;
     private Level level = new Level();
     private MainTopic mainTopic = new MainTopic();
@@ -36,8 +36,8 @@ public class Task {
         return timeLimit;
     }
 
-    public int getMemeoryLimit() {
-        return memeoryLimit;
+    public int getMemoryLimit() {
+        return memoryLimit;
     }
 
     public String getName() {
@@ -62,8 +62,8 @@ public class Task {
         this.timeLimit = timeLimit;
     }
 
-    public void setMemeoryLimit(int memeoryLimit) {
-        this.memeoryLimit = memeoryLimit;
+    public void setMemoryLimit(int memeoryLimit) {
+        this.memoryLimit = memeoryLimit;
     }
 
     public void setName(String name) {
@@ -103,7 +103,7 @@ public class Task {
         if (this.timeLimit != other.timeLimit) {
             return false;
         }
-        if (this.memeoryLimit != other.memeoryLimit) {
+        if (this.memoryLimit != other.memoryLimit) {
             return false;
         }
         if (!Objects.equals(this.name, other.name)) {
@@ -133,7 +133,7 @@ public class Task {
     @Override
     public String toString() {
         return "Task{" + "id=" + id + ", timeLimit=" + timeLimit + 
-                        ", memeoryLimit=" + memeoryLimit + ", name=" + name + ", level=" + level + '}';
+                        ", memeoryLimit=" + memoryLimit + ", name=" + name + ", level=" + level + '}';
     }
 
 }

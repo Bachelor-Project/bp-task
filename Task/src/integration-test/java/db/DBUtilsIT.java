@@ -52,7 +52,7 @@ public class DBUtilsIT {
         task.setName(name);
         task.setLevel(level);
         task.setTimeLimit(time);
-        task.setMemeoryLimit(memory);
+        task.setMemoryLimit(memory);
         return task;
     }
     

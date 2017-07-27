@@ -51,7 +51,7 @@ public class JavaExecution extends Execution {
     }
     
     private String[] makeDockerCommand(String codeFilePath, Task taskData, String tasksRealPath){
-        int mL = taskData.getMemeoryLimit();
+        int mL = taskData.getMemoryLimit();
         int tL = taskData.getTimeLimit() * valueOfSecond;
         String runJavaCom = "java " + codeFilePath;
         String testsDirPathInDocker = tasksDockerPath + taskData.getName() + File.separator + "tests/";

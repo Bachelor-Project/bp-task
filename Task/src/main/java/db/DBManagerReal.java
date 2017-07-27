@@ -16,12 +16,14 @@ import java.util.List;
 import java.util.logging.Logger;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
+import todos.Comment;
 import todos.Language;
 import todos.Level;
 import todos.MainTopic;
 import todos.MainTopicCounter;
 import todos.MainTopicPriorityPair;
 import todos.Task;
+import todos.TaskMin;
 import todos.Topic;
 import todos.TopicType;
 
@@ -64,7 +66,7 @@ public class DBManagerReal implements DBManager {
                 stmt.setString(2, t.getLevel().getDescrip());
                 stmt.setString(3, t.getMainTopic().getDescrip());
                 stmt.setInt(4, t.getTimeLimit());
-                stmt.setInt(5, t.getMemeoryLimit());
+                stmt.setInt(5, t.getMemoryLimit());
                 stmt.execute();
             }
         } catch (SQLException ex) {
@@ -77,7 +79,7 @@ public class DBManagerReal implements DBManager {
             stmt.setString(1, t.getName());
             stmt.setInt(2, t.getLevel().getId());
             stmt.setInt(3, t.getTimeLimit());
-            stmt.setInt(4, t.getMemeoryLimit());
+            stmt.setInt(4, t.getMemoryLimit());
             stmt.execute();
         }
     }
@@ -85,15 +87,12 @@ public class DBManagerReal implements DBManager {
     private int getTaskIdBy(String name) {
         int result = 0;
         try {
-            Connection con = datasource.getConnection();
-            CallableStatement stmt = con.prepareCall("{?= call get_task_id(?)}");
-            stmt.registerOutParameter(1, Types.INTEGER);
-            stmt.setString(2, name);
-            stmt.execute();
-            
-            result = stmt.getInt(1);
-            con.close();
-            stmt.close();
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("{?= call get_task_id(?)}")) {
+                stmt.registerOutParameter(1, Types.INTEGER);
+                stmt.setString(2, name);
+                stmt.execute();
+                result = stmt.getInt(1);
+            }
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -109,26 +108,24 @@ public class DBManagerReal implements DBManager {
     }
     
     private void saveMainTopic(Connection con, int taskId, int topicId) throws SQLException {
-        CallableStatement stmt = con.prepareCall("call save_associated_topic(?, ?)");
-        stmt.setInt(1, taskId);
-        stmt.setInt(2, topicId);
-        stmt.execute();
-        stmt.close();
+        try (CallableStatement stmt = con.prepareCall("call save_associated_topic(?, ?)")) {
+            stmt.setInt(1, taskId);
+            stmt.setInt(2, topicId);
+            stmt.execute();
+        }
     }
 
     @Override
     public void updateTaskMainData(Task t) {
         try {
-            Connection con = datasource.getConnection();
-            CallableStatement stmt = con.prepareCall("call update_config(?, ?, ?, ?, ?)");
-            stmt.setInt(1, t.getId());
-            stmt.setString(2, t.getName());
-            stmt.setInt(3, t.getLevel().getId());
-            stmt.setInt(4, t.getTimeLimit());
-            stmt.setInt(5, t.getMemeoryLimit());
-            stmt.execute();
-            stmt.close();
-            con.close();
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call update_config(?, ?, ?, ?, ?)")) {
+                stmt.setInt(1, t.getId());
+                stmt.setString(2, t.getName());
+                stmt.setInt(3, t.getLevel().getId());
+                stmt.setInt(4, t.getTimeLimit());
+                stmt.setInt(5, t.getMemoryLimit());
+                stmt.execute();
+            }
         } catch (SQLException ex) {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -177,7 +174,7 @@ public class DBManagerReal implements DBManager {
             result.setId(set.getInt(1));
             result.setName(set.getString(2));
             result.setTimeLimit(set.getInt(3));
-            result.setMemeoryLimit(set.getInt(4));
+            result.setMemoryLimit(set.getInt(4));
             result.setLevel(new Level(set.getInt(5), set.getString(6)));
         }
         return result;
@@ -402,7 +399,7 @@ public class DBManagerReal implements DBManager {
     }
 
     @Override
-    public List<MainTopicCounter> getMainTopicsWithCount() {
+    public List<MainTopicCounter> getMainTopicsWithCountForTopics() {
         List<MainTopicCounter> result = new ArrayList<>();
         try {
             try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call select_main_topics_with_count_for_topics()")) {
@@ -442,4 +439,51 @@ public class DBManagerReal implements DBManager {
         
         return result;
     }
+
+    @Override
+    public List<TaskMin> getTasksMinInfo(int mtID) {
+        List<TaskMin> result = new ArrayList();
+        try {
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call select_tasks_min_info_for(?)")) {
+                stmt.setInt(1, mtID);
+                stmt.execute();
+                
+                ResultSet rsSet = stmt.getResultSet();
+                while(rsSet.next()){
+                    TaskMin tm = new TaskMin();
+                    tm.id = rsSet.getInt(1);
+                    tm.name = rsSet.getString(2);
+                    tm.level_id = rsSet.getInt(3);
+                    result.add(tm);
+                }
+                
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        return result;
+    }
+
+    @Override
+    public List<MainTopicCounter> getMainTopicsWithCountForTasks() {
+        List<MainTopicCounter> result = new ArrayList<>();
+        try {
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call select_main_topics_with_count_for_tasks()")) {
+                stmt.execute();
+                
+                ResultSet rsSet = stmt.getResultSet();
+                while(rsSet.next()){
+                    MainTopic mt = new MainTopic(rsSet.getInt(1), rsSet.getString(2));
+                    MainTopicCounter counter = new MainTopicCounter();
+                    counter.mainTopic = mt;
+                    counter.count = rsSet.getInt(3);
+                    result.add(counter);
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        return result;
+    }
+
 }
