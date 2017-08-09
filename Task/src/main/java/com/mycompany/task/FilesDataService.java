@@ -12,12 +12,15 @@ import db.DBManagerReal;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,6 +68,12 @@ public class FilesDataService {
     public FilesDataService(DBManager dbManager){
         this.dbManager = dbManager;
         executionsMap.put("java", new JavaExecution());
+    }
+    
+    @GET
+    @Path("/test_get")
+    public String testGET(){
+        return "T E S T!";
     }
     
     @GET
@@ -154,9 +163,9 @@ public class FilesDataService {
         return Response.status(200).entity(tfd).build();
     }
     
-    private String readFile(File file) throws FileNotFoundException, IOException {
+    private String readFile(File file) throws UnsupportedEncodingException, FileNotFoundException, IOException {
         StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF8"))) {
             String line;
             while((line = reader.readLine()) != null){
                 sb.append(line);
@@ -168,7 +177,7 @@ public class FilesDataService {
     
     private List<Hint> readHint(File file) throws FileNotFoundException, IOException {
         List<Hint> result = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF8"))) {
             String line;
             while((line = reader.readLine()) != null){
                 String tLine = line.trim();
@@ -242,7 +251,7 @@ public class FilesDataService {
     
     private String readSolutionHintFile(File hintFile) throws FileNotFoundException, IOException{
         StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new FileReader(hintFile))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(hintFile), "UTF8"))) {
             String line;
             while((line = reader.readLine()) != null){
                 sb.append(line);
@@ -256,10 +265,10 @@ public class FilesDataService {
     @GET
     @Path("/pdf")
     public Response getPDF(@QueryParam("name") String name){
-        String folder = "/home/dato/Documents/project/topics/";
-        String pdfURL = folder+name;
+//        String folder = "$HOME/Documents/project/topics/";
+        String pdfURL = topicsDestination + name;
         File pdf = new File(pdfURL);
-        System.out.println("pdf: "+pdf.getAbsolutePath());
+        System.out.println("pdf: " + pdf.getAbsolutePath());
         return Response.ok(pdf).type("application/pdf").build();
     }
     
@@ -272,7 +281,7 @@ public class FilesDataService {
                 .entity("TaskData test").build();
     } 
     
-    private final String topicsDestination = "/home/dato/Documents/project/topics/";
+    private final String topicsDestination = "/home/ubuntu/Documents/project/topics/";
     
     @POST
     @Path("/uploadTopic")
@@ -281,7 +290,7 @@ public class FilesDataService {
     public Response uploadTopic(
             @FormDataParam("file") InputStream uploadedInputStream,
             @FormDataParam("file") FormDataContentDisposition fileDetail,
-            @FormDataParam("mainTopic") String mainTopic,
+            @FormDataParam("mainTopic") String mainTopicData,
             @FormDataParam("priority") int priority) {
 
             String fileName = fileDetail.getFileName();
@@ -296,6 +305,10 @@ public class FilesDataService {
             String name = fileName.substring(0, pointIndex);
             String fileExt = fileName.substring(pointIndex + 1);
             
+            String mainTopic = mainTopicData;
+            if (isExistMainTopic(mainTopicData)){
+                mainTopic = dbManager.getMainTopicNameBy(Integer.parseInt(mainTopicData));
+            }
             Topic topic = makeTopicFrom(name, fileExt, mainTopic, priority);
             dbManager.save(topic);
 
@@ -317,25 +330,25 @@ public class FilesDataService {
     private void writeToFile(InputStream uploadedInputStream,
             String uploadedFileLocation) {
 
-            try {
-                    OutputStream out = new FileOutputStream(new File(
-                                    uploadedFileLocation));
-                    int read = 0;
-                    byte[] bytes = new byte[1024];
-
-                    out = new FileOutputStream(new File(uploadedFileLocation));
-                    while ((read = uploadedInputStream.read(bytes)) != -1) {
-                            out.write(bytes, 0, read);
-                    }
-                    out.flush();
-                    out.close();
-            } catch (IOException e) {
-
-                    e.printStackTrace();
+        try {
+            try (OutputStream out = new FileOutputStream(new File(uploadedFileLocation))) {
+                int read = 0;
+                byte[] bytes = new byte[1024];
+                
+//                    out = new FileOutputStream(new File(uploadedFileLocation));
+                while ((read = uploadedInputStream.read(bytes)) != -1) {
+                    out.write(bytes, 0, read);
+                }
+                out.write("ababshshjfahjhajbajbvabv;".getBytes());
+                out.flush();
             }
+        } catch (IOException e) {
+
+            e.printStackTrace();
+        }
     }
     
-    private final String tasksDestination = "/home/dato/Documents/project/tasks/";
+    private final String tasksDestination = "/home/ubuntu/Documents/project/tasks/";
     
     @POST
     @Path("/uploadTask")
@@ -437,10 +450,12 @@ public class FilesDataService {
     public Response runCode(RunCodeDTO runCodeRequest){
         String params = String.format("%s", runCodeRequest);
         System.out.println("params: " + params);
+        System.out.println(runCodeRequest.getLang().toLowerCase());
         
         if (runCodeRequest.isCompiled()){
-            if (executionsMap.containsKey(runCodeRequest.getLang())){
-                Execution execution = executionsMap.get(runCodeRequest.getLang());
+            String progLang = runCodeRequest.getLang().toLowerCase();
+            if (executionsMap.containsKey(progLang)){
+                Execution execution = executionsMap.get(progLang);
                 Task task = dbManager.getTaskBy(runCodeRequest.getTaskId());
                 System.out.println("Executoin: " + execution);
                 System.out.println("runCodeRequest: " + runCodeRequest);

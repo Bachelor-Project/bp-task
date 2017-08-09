@@ -38,11 +38,14 @@ public class JavaExecution extends Execution {
         List<ExecResult> res = new ArrayList<>();
         
         try {
-            String[] command = makeDockerCommand(codeFilePath, taskData, tasksRealPath);
-            ProcessBuilder pb = new ProcessBuilder(command);
-            Process p = pb.start();
+            String command = makeDockerCommand(codeFilePath, taskData, tasksRealPath);
+//            ProcessBuilder pb = new ProcessBuilder(command);
+            Process p = Runtime.getRuntime().exec(command); // pb.start();
             p.waitFor();
             res = processResultStream(p.getInputStream());
+//            System.out.println("----------  start Error stream");
+//            res = processResultStream(p.getErrorStream());
+//            System.out.println("----------  end Error stream");
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(JavaExecution.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -50,11 +53,11 @@ public class JavaExecution extends Execution {
         return res;
     }
     
-    private String[] makeDockerCommand(String codeFilePath, Task taskData, String tasksRealPath){
+    private String makeDockerCommand(String codeFilePath, Task taskData, String tasksRealPath){
         int mL = taskData.getMemoryLimit();
         int tL = taskData.getTimeLimit() * valueOfSecond;
         String runJavaCom = "java " + codeFilePath;
-        String testsDirPathInDocker = tasksDockerPath + taskData.getName() + File.separator + "tests/";
+        String testsDirPathInDocker = tasksDockerPath + taskData.getName() + File.separator + "tests";
         String testsDirPathReal = tasksRealPath + taskData.getName() + File.separator + "tests/";
         String testsNames = getTestsNameFrom(testsDirPathReal);
         
@@ -62,7 +65,9 @@ public class JavaExecution extends Execution {
         
 //        System.out.println("runUserCode: " + runUserCode);
         
-        return new String[]{"/bin/bash","-c","echo albatrosi0289 | " + runDockerImage + " " + runUserCode};
+//        return new String[]{"/bin/bash","-c","echo admin | " + runDockerImage + " " + runUserCode};
+        return runDockerImage + " " + runUserCode;
+//        return new String[]{runDockerImage + " " + runUserCode};
     }
     
     private String getTestsNameFrom(String dirPath){
@@ -86,7 +91,7 @@ public class JavaExecution extends Execution {
         List<ExecResult> results = new ArrayList<>();
         BufferedReader reader = new BufferedReader(new InputStreamReader(strm));
         String line;
-//        System.out.println("------------start--------------");
+        System.out.println("------------start--------------");
         String test = "", message = "";
         ExceptionType exType = ExceptionType.NoError;
         while((line = reader.readLine()) != null){
@@ -99,6 +104,7 @@ public class JavaExecution extends Execution {
             else if (line.toLowerCase().startsWith("message:")){
                 message = line.substring(line.indexOf("Message: ") + "Message: ".length());
             }
+            System.out.println("line: " + line);
 //            System.out.println("--------------- ex Result variables ---------------------");
 //            System.out.println(test);
 //            System.out.println(exType.toString());
@@ -111,7 +117,7 @@ public class JavaExecution extends Execution {
                 results.add(exRes);
             }
         }
-//        System.out.println("-------------end-------------");
+        System.out.println("-------------end-------------");
         return results;
     }
 
