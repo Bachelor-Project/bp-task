@@ -8,6 +8,7 @@ package com.mycompany.task;
 import Interfaces.DBManager;
 import Interfaces.Execution;
 import core.JavaExecution;
+import core.PythonExecution;
 import db.DBManagerReal;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -15,7 +16,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -68,6 +68,7 @@ public class FilesDataService {
     public FilesDataService(DBManager dbManager){
         this.dbManager = dbManager;
         executionsMap.put("java", new JavaExecution());
+        executionsMap.put("python", new PythonExecution());
     }
     
     @GET
