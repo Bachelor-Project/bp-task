@@ -20,7 +20,7 @@ public abstract class Execution {
     protected String allTaskTestsFolderName = "tests";
     protected String testsFilesExtention = "in";
     protected int valueOfSecond = 1000;
-    protected String runDockerImage = "/usr/bin/docker run --rm -v /home/ubuntu/Documents/project:/test -w /test oracle-java";
+    protected String runDockerImage = "/usr/bin/docker run --rm -v /home/dato/Documents/project:/test -w /test oracle-java";
     
     
     public abstract List<ExecResult> run(String codeFilePath, Task taskData, String tasksRealPath);

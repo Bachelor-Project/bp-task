@@ -281,7 +281,7 @@ public class FilesDataService {
                 .entity("TaskData test").build();
     } 
     
-    private final String topicsDestination = "/home/ubuntu/Documents/project/topics/";
+    private final String topicsDestination = "/home/dato/Documents/project/topics/";
     
     @POST
     @Path("/uploadTopic")
@@ -294,6 +294,11 @@ public class FilesDataService {
             @FormDataParam("priority") int priority) {
 
             String fileName = fileDetail.getFileName();
+            try {
+                fileName = new String (fileDetail.getFileName().getBytes ("iso-8859-1"), "UTF-8");
+            } catch (UnsupportedEncodingException ex) {
+                Logger.getLogger(FilesDataService.class.getName()).log(Level.SEVERE, null, ex);
+            }
             System.out.println("fileName: " + fileName);
             String uploadedFileLocation = topicsDestination + fileName;
 
@@ -348,7 +353,7 @@ public class FilesDataService {
         }
     }
     
-    private final String tasksDestination = "/home/ubuntu/Documents/project/tasks/";
+    private final String tasksDestination = "/home/dato/Documents/project/tasks/";
     
     @POST
     @Path("/uploadTask")
@@ -457,9 +462,9 @@ public class FilesDataService {
             if (executionsMap.containsKey(progLang)){
                 Execution execution = executionsMap.get(progLang);
                 Task task = dbManager.getTaskBy(runCodeRequest.getTaskId());
-                System.out.println("Executoin: " + execution);
-                System.out.println("runCodeRequest: " + runCodeRequest);
                 String codeFilePath = execution.getCodeFilePath(runCodeRequest.getUsername(), task.getName());
+                
+                System.out.println("in service codeFilePath: " + codeFilePath);
                 
                 List<ExecResult> execRes = execution.run(codeFilePath, task, tasksDestination);
                 return Response.status(200).

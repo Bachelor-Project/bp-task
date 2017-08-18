@@ -12,6 +12,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -36,16 +39,16 @@ public class JavaExecution extends Execution {
     @Override
     public List<ExecResult> run(String codeFilePath, Task taskData, String tasksRealPath) {
         List<ExecResult> res = new ArrayList<>();
+        System.out.println("in run codeFilePath: " + codeFilePath);
         
         try {
             String command = makeDockerCommand(codeFilePath, taskData, tasksRealPath);
+            System.out.println("command: " + command);
+            
 //            ProcessBuilder pb = new ProcessBuilder(command);
             Process p = Runtime.getRuntime().exec(command); // pb.start();
             p.waitFor();
             res = processResultStream(p.getInputStream());
-//            System.out.println("----------  start Error stream");
-//            res = processResultStream(p.getErrorStream());
-//            System.out.println("----------  end Error stream");
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(JavaExecution.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -53,21 +56,23 @@ public class JavaExecution extends Execution {
         return res;
     }
     
-    private String makeDockerCommand(String codeFilePath, Task taskData, String tasksRealPath){
+    private String makeDockerCommand(String codeFilePath, Task taskData, String tasksRealPath) throws UnsupportedEncodingException{
         int mL = taskData.getMemoryLimit();
         int tL = taskData.getTimeLimit() * valueOfSecond;
-        String runJavaCom = "java " + codeFilePath;
+        String runJavaCom = "java " + codeFilePath; //URLEncoder.encode(codeFilePath, "UTF-8");
+        
+        System.out.println("in makeDockerCommand codeFilePath: " + codeFilePath);
+        
         String testsDirPathInDocker = tasksDockerPath + taskData.getName() + File.separator + "tests";
         String testsDirPathReal = tasksRealPath + taskData.getName() + File.separator + "tests/";
         String testsNames = getTestsNameFrom(testsDirPathReal);
         
-        String runUserCode = String.format("java -jar ./codesData/Runner.jar -Xmx%dm %d %s %s %s", mL, tL, runJavaCom, testsDirPathInDocker, testsNames);
-        
-//        System.out.println("runUserCode: " + runUserCode);
+//        String runUserCode = String.format("java -jar ./codesData/Runner.jar -Xmx%dm %d %s %s %s", mL, tL, runJavaCom, testsDirPathInDocker, testsNames);
+        String runUserCode = "java -jar ./codesData/Runner.jar -Xmx" + mL + "m " + tL + " " + runJavaCom + " " + testsDirPathInDocker + " " + testsNames;
+        System.out.println("in makeDockerCommand - runUserCode: " + runUserCode);
         
 //        return new String[]{"/bin/bash","-c","echo admin | " + runDockerImage + " " + runUserCode};
         return runDockerImage + " " + runUserCode;
-//        return new String[]{runDockerImage + " " + runUserCode};
     }
     
     private String getTestsNameFrom(String dirPath){
@@ -104,11 +109,9 @@ public class JavaExecution extends Execution {
             else if (line.toLowerCase().startsWith("message:")){
                 message = line.substring(line.indexOf("Message: ") + "Message: ".length());
             }
+            
             System.out.println("line: " + line);
-//            System.out.println("--------------- ex Result variables ---------------------");
-//            System.out.println(test);
-//            System.out.println(exType.toString());
-//            System.out.println(message);
+            
             if (line.isEmpty()) {
                 ExecResult exRes = new ExecResult();
                 exRes.setTestName(test);
