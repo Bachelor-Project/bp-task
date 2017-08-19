@@ -7,6 +7,7 @@ package com.mycompany.task;
 
 import Interfaces.DBManager;
 import Interfaces.Execution;
+import core.CPPExecution;
 import core.JavaExecution;
 import core.PythonExecution;
 import db.DBManagerReal;
@@ -69,6 +70,7 @@ public class FilesDataService {
         this.dbManager = dbManager;
         executionsMap.put("java", new JavaExecution());
         executionsMap.put("python", new PythonExecution());
+        executionsMap.put("c_cpp", new CPPExecution());
     }
     
     @GET
