@@ -347,7 +347,7 @@ public class FilesDataService {
                 while ((read = uploadedInputStream.read(bytes)) != -1) {
                     out.write(bytes, 0, read);
                 }
-                out.write("ababshshjfahjhajbajbvabv;".getBytes());
+//                out.write("ababshshjfahjhajbajbvabv;".getBytes());
                 out.flush();
             }
         } catch (IOException e) {
@@ -470,6 +470,9 @@ public class FilesDataService {
                 System.out.println("in service codeFilePath: " + codeFilePath);
                 
                 List<ExecResult> execRes = execution.run(codeFilePath, task, tasksDestination);
+                
+                System.out.println("execRes size: " + execRes.size());
+                
                 return Response.status(200).
 //                        type(MediaType.TEXT_PLAIN). // ------------
                         entity(execRes).build();
@@ -482,4 +485,14 @@ public class FilesDataService {
 
     }
     
+    
+    private String getUTFStringFrom(String str){
+        String result = str;
+        try {
+            result = new String (str.getBytes (), "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(FilesDataService.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return result;
+    }
 }

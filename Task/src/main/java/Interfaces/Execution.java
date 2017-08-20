@@ -28,7 +28,7 @@ public abstract class Execution {
     protected String testsFilesExtention = "in";
     protected int valueOfSecond = 1000;
     protected String projectDirectory = "/home/dato/Documents/project";
-    protected String runDockerImage = "/usr/bin/docker run --rm -v " + projectDirectory + ":/test -w /test oracle-java";
+    protected String runDockerImage = "/usr/bin/docker run --rm -v " + projectDirectory + ":/test -w /test ubuntu-16.04";
     
     
     public abstract List<ExecResult> run(String codeFilePath, Task taskData, String tasksRealPath);
