@@ -389,6 +389,12 @@ public class FilesDataService {
                             @FormDataParam("level") String level){
         try {
             String name = fileDetail.getFileName();
+            try {
+                name = new String (fileDetail.getFileName().getBytes ("iso-8859-1"), "UTF-8");
+            } catch (UnsupportedEncodingException ex) {
+                Logger.getLogger(FilesDataService.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
             String nameWithoutExt = name.substring(0, name.lastIndexOf("."));
             String params = String.format("%s %d %d %s %s", 
                                 name, timeLm, memoryLm, mainTopicData, level);
