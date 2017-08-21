@@ -5,6 +5,7 @@
  */
 package Interfaces;
 
+import java.sql.SQLException;
 import java.util.List;
 import todos.Comment;
 import todos.Level;
@@ -22,10 +23,14 @@ import todos.TopicType;
  */
 public interface DBManager {
     
-    public void save(String mainTopicName);
+    public void save(String mainTopicName) throws SQLException;
     public List<MainTopic> getMainTopics();
-    public void updateMainTopic(int id, String newDescrip);
-    public void deleteMainTopic(int id);
+    public void updateMainTopic(int id, String newDescrip) throws SQLException;
+    public void deleteMainTopic(int id) throws SQLException;
+    public List<Topic> getTopics();
+    public List<Task> getTasks();
+    
+    public void deleteTopic(String name);
     
     public void save(int mainTopicId, TopicType type);
     public List<TopicType> getTopicTypes(int mainTopicId);
@@ -36,6 +41,7 @@ public interface DBManager {
     public void save(Task t);
     public void updateTaskMainData(Task t);
     public boolean deleteTask(int id);
+    public void deleteTaskByName(String name);
     public Task getTaskBy(int id);
     public List<Integer> getTasksIdsFor(int topicId);
     

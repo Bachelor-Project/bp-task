@@ -10,13 +10,13 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
-import todos.Comment;
 import todos.Language;
 import todos.Level;
 import todos.MainTopic;
@@ -303,8 +303,11 @@ public class DBManagerReal implements DBManager {
     }
 
     @Override
-    public void save(String mainTopicName) {
-        
+    public void save(String mainTopicName) throws SQLException {
+        try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call save_main_topic(?)")) {
+            stmt.setString(1, mainTopicName);
+            stmt.execute();
+        }
     }
 
     @Override
@@ -330,13 +333,67 @@ public class DBManagerReal implements DBManager {
     }
 
     @Override
-    public void updateMainTopic(int id, String name) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void updateMainTopic(int id, String name) throws SQLException {
+        try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call update_main_topic(?, ?)")) {
+            stmt.setInt(1, id);
+            stmt.setString(2, name);
+            stmt.execute();
+        }
     }
 
     @Override
-    public void deleteMainTopic(int id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void deleteMainTopic(int id) throws SQLException {
+        try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call delete_main_topic(?)")) {
+            stmt.setInt(1, id);
+            stmt.execute();
+        }
+    }
+    
+    @Override
+    public List<Topic> getTopics(){
+        List<Topic> topics = new ArrayList();
+        try {
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call get_all_topics()")) {
+                stmt.execute();
+                
+                ResultSet rsSet = stmt.getResultSet();
+                while(rsSet.next()){
+                    Topic t = new Topic();
+                    t.setId(rsSet.getInt(1));
+                    t.setName(rsSet.getString(2));
+                    t.setFileExt(rsSet.getString(3));
+                    t.setPriority(rsSet.getInt(4));
+                    t.setMainTopic(new MainTopic(rsSet.getInt(5), rsSet.getString(6)));
+                    topics.add(t);
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        return topics;
+    }
+    
+    @Override
+    public List<Task> getTasks(){
+        List<Task> tasks = new ArrayList();
+        try {
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call get_all_tasks()")) {
+                stmt.execute();
+                
+                ResultSet rsSet = stmt.getResultSet();
+                while(rsSet.next()){
+                    Task t = new Task();
+                    t.setId(rsSet.getInt(1));
+                    t.setName(rsSet.getString(2));
+                    t.setTimeLimit(rsSet.getInt(3));
+                    t.setMemoryLimit(rsSet.getInt(4));
+                    tasks.add(t);
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        return tasks;
     }
 
     @Override
@@ -484,6 +541,30 @@ public class DBManagerReal implements DBManager {
             Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         return result;
+    }
+
+    @Override
+    public void deleteTopic(String name) {
+        try {
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call delete_topic_by_name(?)")) {
+                stmt.setString(1, name);
+                stmt.execute();
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+    }
+
+    @Override
+    public void deleteTaskByName(String name) {
+        try {
+            try (Connection con = datasource.getConnection(); CallableStatement stmt = con.prepareCall("call delete_task_by_name(?)")) {
+                stmt.setString(1, name);
+                stmt.execute();
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManagerReal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
     }
 
 }

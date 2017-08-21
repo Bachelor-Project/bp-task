@@ -39,7 +39,7 @@ public class PythonExecution extends Execution {
         List<ExecResult> res = new ArrayList<>();
         
         try {
-            System.out.println("path in run: " + projectDirectory + codeFilePath.substring(1));
+//            System.out.println("path in run: " + projectDirectory + codeFilePath.substring(1));
             
             File codeFile = new File(projectDirectory + codeFilePath.substring(1));
             addImports(codeFile);

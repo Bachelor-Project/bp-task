@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,14 +33,17 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.commons.io.FileUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import todos.ExecResult;
@@ -129,6 +133,20 @@ public class FilesDataService {
     public Response getTasksMinData(@PathParam("mt_id") int mtID){
         System.out.println("main topic id: " + mtID);
         return Response.status(200).entity(dbManager.getTasksMinInfo(mtID)).build();
+    }
+    
+    @GET
+    @Path("/all_topics")
+    public Response getAllTopics(){
+        List<Topic> topics = dbManager.getTopics();
+        return Response.status(200).entity(topics).build();
+    }
+    
+    @GET
+    @Path("/all_tasks")
+    public Response getAllTasks(){
+        List<Task> tasks = dbManager.getTasks();
+        return Response.status(200).entity(tasks).build();
     }
     
     @GET
@@ -486,13 +504,104 @@ public class FilesDataService {
     }
     
     
-    private String getUTFStringFrom(String str){
-        String result = str;
+    
+    @POST
+    @Path("/update_main_topic")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response updateMainTopic(@FormDataParam("main_topic_id") int mtID,
+                                    @FormDataParam("main_topic_new_name") String mtName){
+        System.out.println("mtID: " + mtID);
+        System.out.println("mtName: " + mtName);
+        
         try {
-            result = new String (str.getBytes (), "UTF-8");
-        } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(FilesDataService.class.getName()).log(Level.SEVERE, null, ex);
+            dbManager.updateMainTopic(mtID, mtName);
+        } catch (SQLException ex) {
+            String resposneStr = "Update error: ";
+            if (ex.getErrorCode() == 1062){ // Duplicate entry
+                resposneStr += " Duplicate Entry!";
+            }
+            return Response.status(400).entity(resposneStr).build();
         }
-        return result;
+        return Response.status(200).entity("Update success").build();
     }
+    
+    
+    @POST
+    @Path("/upload_main_topic")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response uploadMainTopic(@FormDataParam("main_topic_name") String mtName){
+        System.out.println("mtName: " + mtName);
+        
+        try {
+            dbManager.save(mtName);
+        } catch (SQLException ex) {
+            String resposneStr = "Upload error: ";
+            if (ex.getErrorCode() == 1062){ // Duplicate entry
+                resposneStr += " Duplicate Entry!";
+            }
+            return Response.status(400).entity(resposneStr).build();
+        }
+        return Response.status(200).entity("Upload success").build();
+    }
+    
+    @DELETE
+    @Path("/delete_main_topic/{id}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response deleteMainTopic(@PathParam("id") int id){
+        System.out.println("mt ID: " + id);
+        
+        try {
+            dbManager.deleteMainTopic(id);
+        } catch (SQLException ex) {
+            String resposneStr = "Error during removing.";
+            return Response.status(400).entity(resposneStr).build();
+        }
+        return Response.status(200).entity("Removed success").build();
+    }
+    
+    @DELETE
+    @Path("/delete_topic/{name}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response deleteTopic(@PathParam("name") String name){
+        System.out.println("full path: " + topicsDestination + name);
+        
+        Response response = Response.status(204).build();
+        File topicFile = new File(topicsDestination + name);
+        if (topicFile.exists()){
+            topicFile.delete();
+            
+            dbManager.deleteTopic(name.substring(0, name.lastIndexOf(".")));
+        } else {
+            response = Response.status(400).entity("File with name " + name + " does not exists!").build();
+        }
+        
+        return response;
+    }
+    
+    @DELETE
+    @Path("/delete_task/{name}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response deleteTask(@PathParam("name") String name){
+        System.out.println("full path: " + tasksDestination + name);
+        
+        Response response = Response.status(204).build();
+        File taskFile = new File(tasksDestination + name);
+        if (taskFile.exists()){
+            try {
+                FileUtils.deleteDirectory(taskFile);
+            } catch (IOException ex) {
+                Logger.getLogger(FilesDataService.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            dbManager.deleteTaskByName(name);
+        } else {
+            response = Response.status(400).entity("File with name " + name + " does not exists!").build();
+        }
+        
+        return response;
+    }
+    
+    
 }

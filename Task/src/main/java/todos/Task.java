@@ -133,7 +133,9 @@ public class Task {
     @Override
     public String toString() {
         return "Task{" + "id=" + id + ", timeLimit=" + timeLimit + 
-                        ", memeoryLimit=" + memoryLimit + ", name=" + name + ", level=" + level + '}';
+                        ", memeoryLimit=" + memoryLimit + ", name=" + name + 
+                        ", level=" + level +
+                        ", mainTopic=" + mainTopic + "}";
     }
 
 }

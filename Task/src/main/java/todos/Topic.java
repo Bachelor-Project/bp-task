@@ -13,12 +13,20 @@ public class Topic {
     
     private String name, fielExt;
     private MainTopic mainTopic = new MainTopic();
-    private int priority;
+    private int id, priority;
     
     public Topic(){}
 
     public String getName() {
         return name;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public void setName(String name) {
